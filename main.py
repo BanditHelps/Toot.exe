@@ -46,7 +46,7 @@ class FloatingVideoPlayer(QWidget):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateFrame)
-        self.timer.start(33)  # Approximately 30 fps
+        self.timer.start(42)  # Approximately 30 fps
 
     def ensureOnScreen(self):
         screen_geometry = self.main_window.getScreenGeometry()
@@ -143,6 +143,7 @@ class FloatingVideoPlayer(QWidget):
         menu.exec_(pos)
 
     def closeEvent(self, event):
+        self.timer.stop()
         self.main_window.removeCharacter(self)
         event.accept()
 
