@@ -7,13 +7,13 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QLabel
 
 class FloatingVideoPlayer(QWidget):
-    def __init__(self, video_names, main_window):
+    def __init__(self, character_defs, init_char_def, main_window):
         super().__init__()
-        self.video_path = video_names[0]['path']
-        self.video_names = video_names
+        self.anim_path = init_char_def['path']
+        self.character_defs = character_defs
         self.main_window = main_window
         self.initUI()
-        self.initVideo()
+        self.initCharacterAnim()
 
     def initUI(self):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
@@ -26,10 +26,10 @@ class FloatingVideoPlayer(QWidget):
 
         self.setGeometry(100, 100, 300, 300)  # Initial size, will be adjusted
 
-    def initVideo(self, update=False):
-        self.cap = cv2.VideoCapture(self.video_path)
+    def initCharacterAnim(self, update=False):
+        self.cap = cv2.VideoCapture(self.anim_path)
         if not self.cap.isOpened():
-            print(f"Error: Could not open video file {self.video_path}")
+            print(f"Error: Could not open video file {self.anim_path}")
             self.close()
             exit()
 
@@ -37,7 +37,7 @@ class FloatingVideoPlayer(QWidget):
         self.frame_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         if not update:
-            self.setGeometry(100, 100, self.frame_width, self.frame_height)
+            self.setGeometry(1000, 800, self.frame_width, self.frame_height)
         else:
             self.resize(self.frame_width, self.frame_height)
 
@@ -104,15 +104,27 @@ class FloatingVideoPlayer(QWidget):
         menu = QMenu(self)
         submenu = menu.addMenu('Toot')
 
-        for video_name in self.video_names:
-                    action = QAction(video_name['name'], self)
-                    action.triggered.connect(lambda _, path=video_name['path']: self.changeVideo(path))
+        for cur_def in self.character_defs:
+                    action = QAction(cur_def['name'], self)
+                    action.triggered.connect(lambda _, path=cur_def['path']: self.changeAnim(path))
                     submenu.addAction(action)
 
+        # Spawn a new character
         spawnAction = QAction('Spawn New', self)
         spawnAction.triggered.connect(self.main_window.spawnNewCharacter)
         menu.addAction(spawnAction)
 
+        # Start a rave with all the characters
+        raveAction = QAction('Rave', self)
+        raveAction.triggered.connect(self.main_window.startRave)
+        menu.addAction(raveAction)
+
+        # Remove the current character
+        removeAction = QAction('Remove', self)
+        removeAction.triggered.connect(self.close)
+        menu.addAction(removeAction)
+
+        # Exit the application
         exitAction = QAction('Exit', self)
         exitAction.triggered.connect(QApplication.instance().quit)
         menu.addAction(exitAction)
@@ -123,22 +135,22 @@ class FloatingVideoPlayer(QWidget):
         self.main_window.removeCharacter(self)
         event.accept()
 
-    def changeVideo(self, video_path):
+    def changeAnim(self, anim_path):
         self.cap.release()
-        self.video_path = video_path
+        self.anim_path = anim_path
         self.timer.stop()
-        self.initVideo(update=True)
+        self.initCharacterAnim(update=True)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, video_names):
+    def __init__(self, character_defs):
         super().__init__()
-        self.video_names = video_names
+        self.character_defs = character_defs
         self.characters = []
         self.spawnNewCharacter()
 
     def spawnNewCharacter(self):
-        character = FloatingVideoPlayer(self.video_names, self)
+        character = FloatingVideoPlayer(self.character_defs, self.character_defs[0], self)
         character.show()
         self.characters.append(character)
 
@@ -147,10 +159,17 @@ class MainWindow(QMainWindow):
         if not self.characters:
             QApplication.instance().quit()
 
+    def startRave(self):
+        for char_def in self.character_defs:
+            character = FloatingVideoPlayer(self.character_defs, char_def, self)
+            character.show()
+            self.characters.append(character)
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    video_names = [
+    character_defs = [
         {'name': 'Normal',   'path': 'videos/normal_toot.mp4' },
         {'name': 'Shorty',   'path': 'videos/short_toot.mp4'  },
         {'name': 'Tall-Boi', 'path': 'videos/tall_toot.mp4'   },
@@ -162,5 +181,5 @@ if __name__ == '__main__':
         {'name': 'Light',    'path': 'videos/light_toot.mp4'  }
     ]
 
-    main_window = MainWindow(video_names)
+    main_window = MainWindow(character_defs)
     sys.exit(app.exec_())
