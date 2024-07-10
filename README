@@ -1,0 +1,46 @@
+# Toot.exe
+
+Ever feel lonely on your computer? 
+Well not any more! Toot.exe is here for you!
+
+Toot.exe is a "Pal Program". It can add a variety of pals to your computer screen.
+
+Currently, only the dancing Toothless memes are in here, but future features include additional characters.
+
+Music Toot
+![alt text](docs/MusicRocker.png)
+
+## Features
+- Add a number of Toothless Characters to your screen
+- Move and reposition them however you want
+- No spyware! Imagine that? A pal program that doesn't sell your info!
+
+## Installation
+
+To use this program, you'll need to have Python and pip installed on your machine. If you don't have them installed, you can follow these instructions:
+
+1. Install Python: [Python Installation Guide](https://www.python.org/downloads/)
+2. Install pip: [pip Installation Guide](https://pip.pypa.io/en/stable/installing/)
+
+Once you have Python and pip installed, you can proceed with the following steps:
+
+1. Clone this repository to your local machine.
+2. Open a terminal or command prompt and navigate to the project directory.
+3. Install the required dependencies by running the following command:
+    ```
+    pip install -r requirements.txt
+    ```
+
+## Usage
+
+To run the program, execute main.py
+
+
+## Upcoming Features
+- Add your own Pals
+- Music Reactivity
+- Customizations
+- Live Streaming Integration
+- Discord Integration
+
+
