@@ -142,6 +142,11 @@ class MainWindow(QMainWindow):
         character.show()
         self.characters.append(character)
 
+    def removeCharacter(self, character):
+        self.characters.remove(character)
+        if not self.characters:
+            QApplication.instance().quit()
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
@@ -157,6 +162,5 @@ if __name__ == '__main__':
         {'name': 'Light',    'path': 'videos/light_toot.mp4'  }
     ]
 
-    player = FloatingVideoPlayer(video_names)
-    player.show()
+    main_window = MainWindow(video_names)
     sys.exit(app.exec_())
