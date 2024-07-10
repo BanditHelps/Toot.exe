@@ -1,10 +1,11 @@
 import sys
 import cv2
 import numpy as np
+import random
 from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction, QVBoxLayout, QMainWindow
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLabel, QDesktopWidget
 
 class FloatingVideoPlayer(QWidget):
     def __init__(self, character_defs, init_char_def, main_window):
@@ -14,6 +15,7 @@ class FloatingVideoPlayer(QWidget):
         self.main_window = main_window
         self.initUI()
         self.initCharacterAnim()
+        self.ensureOnScreen()
 
     def initUI(self):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
@@ -37,13 +39,22 @@ class FloatingVideoPlayer(QWidget):
         self.frame_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         if not update:
-            self.setGeometry(1000, 800, self.frame_width, self.frame_height)
+            screen_geometry = self.main_window.getScreenGeometry()
+            self.setGeometry(int(screen_geometry.width() / 2), int(screen_geometry.height() / 2), self.frame_width, self.frame_height)
         else:
             self.resize(self.frame_width, self.frame_height)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateFrame)
         self.timer.start(33)  # Approximately 30 fps
+
+    def ensureOnScreen(self):
+        screen_geometry = self.main_window.getScreenGeometry()
+        if not screen_geometry.contains(self.geometry()):
+            # If the widget is out of screen bounds, move it to a valid position
+            new_x = max(screen_geometry.x(), min(screen_geometry.x() + screen_geometry.width() - self.width(), self.x()))
+            new_y = max(screen_geometry.y(), min(screen_geometry.y() + screen_geometry.height() - self.height(), self.y()))
+            self.move(new_x, new_y)
 
     def updateFrame(self):
         ret, frame = self.cap.read()
@@ -149,10 +160,21 @@ class MainWindow(QMainWindow):
         self.characters = []
         self.spawnNewCharacter()
 
-    def spawnNewCharacter(self):
+    def spawnNewCharacter(self, random_position=False):
         character = FloatingVideoPlayer(self.character_defs, self.character_defs[0], self)
+        if random_position:
+            self.positionCharacterRandomly(character)
+
         character.show()
         self.characters.append(character)
+
+    def positionCharacterRandomly(self, character):
+        screen_geometry = self.getScreenGeometry()
+        max_x = screen_geometry.width() - character.width()
+        max_y = screen_geometry.height() - character.height()
+        random_x = random.randint(0, max_x)
+        random_y = random.randint(0, max_y)
+        character.move(screen_geometry.x() + random_x, screen_geometry.y() + random_y)
 
     def removeCharacter(self, character):
         self.characters.remove(character)
@@ -162,8 +184,14 @@ class MainWindow(QMainWindow):
     def startRave(self):
         for char_def in self.character_defs:
             character = FloatingVideoPlayer(self.character_defs, char_def, self)
+            self.positionCharacterRandomly(character)
             character.show()
             self.characters.append(character)
+
+    def getScreenGeometry(self):
+        desktop = QDesktopWidget()
+        screen_number = desktop.screenNumber(self)
+        return desktop.screenGeometry(screen_number)
 
 
 if __name__ == '__main__':
